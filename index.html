@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeevrasayan - Advancing Biochemistry</title>
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #0056d6;
+            --primary-soft: rgba(0, 86, 214, 0.12);
+            --secondary-color: #6C757D;
+            --accent-color: #28a745;
+            --background-color: #0b1020;
+            --card-background: #121727;
+            --card-soft: rgba(255,255,255,0.03);
+            --text-color: #e9edf5;
+            --muted-text: #a7b0c5;
+            --heading-font: 'Poppins', sans-serif;
+            --body-font: 'Poppins', sans-serif;
+            --radius-lg: 18px;
+            --shadow-soft: 0 18px 40px rgba(0,0,0,0.45);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--body-font);
+            background: radial-gradient(circle at top left, #1b2550, #050814 55%);
+            color: var(--text-color);
+            line-height: 1.7;
+        }
+
+        /* Header / Nav */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: rgba(5, 8, 20, 0.92);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            padding: 12px 6%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo {
+            width: 38px;
+            height: 38px;
+            border-radius: 14px;
+            background: radial-gradient(circle at 30% 20%, #40c4ff, #0056d6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 10px 25px rgba(0, 86, 214, 0.6);
+        }
+
+        .brand-text h1 {
+            font-family: var(--heading-font);
+            font-size: 1.4rem;
+            margin: 0;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .brand-text span {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--muted-text);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .nav-buttons button {
+            background: transparent;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 18px;
+            margin-left: 10px;
+            cursor: pointer;
+            color: var(--text-color);
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s ease;
+        }
+
+        .nav-buttons button:hover {
+            border-color: var(--primary-color);
+            background: rgba(0, 86, 214, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .nav-buttons .subscribe {
+            background: linear-gradient(135deg, #1dd1a1, #10ac84);
+            border: none;
+            color: #fff;
+            box-shadow: 0 10px 25px rgba(16, 172, 132, 0.55);
+        }
+
+        .nav-buttons .subscribe:hover {
+            filter: brightness(1.06);
+            transform: translateY(-2px) scale(1.01);
+        }
+
+        /* Layout */
+        .container {
+            padding: 30px 6%;
+            max-width: 1180px;
+            margin: 0 auto 60px;
+        }
+
+        /* Hero Section */
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.1fr);
+            gap: 40px;
+            align-items: center;
+            margin-top: 25px;
+            margin-bottom: 40px;
+        }
+
+        .hero-text h2 {
+            font-size: 2.4rem;
+            margin: 0 0 12px;
+        }
+
+        .hero-gradient {
+            background: linear-gradient(120deg, #40c4ff, #1dd1a1);
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .hero-subtitle {
+            font-size: 1.05rem;
+            color: var(--muted-text);
+            max-width: 520px;
+            margin-bottom: 18px;
+        }
+
+        .hero-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .tag-pill {
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.14);
+            font-size: 0.8rem;
+            color: var(--muted-text);
+            background: rgba(6, 11, 30, 0.9);
+        }
+
+        .hero-cta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #40c4ff, #0056d6);
+            border: none;
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 999px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 14px 35px rgba(0, 86, 214, 0.55);
+            transition: all 0.28s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px) scale(1.01);
+            filter: brightness(1.05);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,0.25);
+            padding: 9px 18px;
+            font-size: 0.9rem;
+            color: var(--muted-text);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s ease;
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--primary-color);
+            color: var(--text-color);
+            background: rgba(255,255,255,0.03);
+        }
+
+        .hero-meta {
+            margin-top: 20px;
+            font-size: 0.8rem;
+            color: var(--muted-text);
+        }
+
+        .hero-meta strong {
+            color: #cdd4eb;
+        }
+
+        .hero-image-wrapper {
+            position: relative;
+        }
+
+        .hero-image {
+            position: relative;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: 100%;
+            max-height: 360px;
+            object-fit: cover;
+            display: block;
+            transform: scale(1.02);
+            transition: transform 0.8s ease;
+        }
+
+        .hero-image::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top, rgba(0, 0, 0, 0) 0%, rgba(5, 8, 20, 0.45) 80%);
+            pointer-events: none;
+        }
+
+        .hero-image:hover img {
+            transform: scale(1.06);
+        }
+
+        .hero-badge {
+            position: absolute;
+            bottom: -16px;
+            left: 18px;
+            right: auto;
+            background: rgba(9, 15, 40, 0.96);
+            border-radius: 16px;
+            padding: 10px 14px;
+            border: 1px solid rgba(255,255,255,0.06);
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 14px 38px rgba(0,0,0,0.7);
+        }
+
+        .hero-badge-pill {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: #1dd1a1;
+            box-shadow: 0 0 12px rgba(29, 209, 161, 0.9);
+        }
+
+        .hero-badge-text {
+            font-size: 0.78rem;
+            color: var(--muted-text);
+        }
+
+        .hero-badge-text strong {
+            color: #e7f7ff;
+        }
+
+        /* Sections */
+        section {
+            padding: 40px 0 10px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 26px;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            margin: 0 0 10px;
+        }
+
+        .section-accent {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--muted-text);
+        }
+
+        .section-accent span {
+            width: 32px;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(64,196,255,0), rgba(64,196,255,0.7));
+        }
+
+        #about p {
+            max-width: 880px;
+            margin: 0 auto 10px;
+            font-size: 0.98rem;
+            color: var(--muted-text);
+        }
+
+        #about p strong {
+            color: #e5ebff;
+        }
+
+        /* Modules Grid */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .module-card {
+            background: linear-gradient(145deg, rgba(16,22,48,0.96), rgba(5,8,20,0.98));
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
+            transform: translateY(0) scale(1);
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+
+        .module-card:hover {
+            transform: translateY(-6px) scale(1.01);
+            box-shadow: 0 22px 50px rgba(0,0,0,0.8);
+            border-color: rgba(64,196,255,0.7);
+        }
+
+        .module-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .card-content {
+            padding: 18px 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card-content h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #e7f0ff;
+        }
+
+        .card-content p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--muted-text);
+        }
+
+        .card-pill {
+            margin-top: 10px;
+            align-self: flex-start;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: var(--primary-soft);
+            color: #b9d1ff;
+        }
+
+        /* Footer */
+        .footer {
+            background: #050814;
+            color: var(--muted-text);
+            text-align: center;
+            padding: 24px 10px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.85rem;
+        }
+
+        .footer span {
+            color: #e5ebff;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .hero {
+                grid-template-columns: 1fr;
+                margin-top: 18px;
+            }
+            .hero-image-wrapper {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                padding-inline: 4%;
+            }
+            .container {
+                padding-inline: 4%;
+            }
+            .hero-text h2 {
+                font-size: 1.9rem;
+            }
+            .nav-buttons button {
+                padding-inline: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <div class="brand">
+            <div class="brand-logo">Jr</div>
+            <div class="brand-text">
+                <h1>Jeevrasayan</h1>
+                <span>Clinical &amp; Fundamental Biochemistry</span>
+            </div>
+        </div>
+
+        <nav class="nav-buttons">
+            <button class="login">Login</button>
+            <button class="subscribe">Subscribe</button>
+        </nav>
+    </header>
+
+    <main class="container">
+
+        <!-- HERO -->
+        <section class="hero">
+            <div class="hero-text">
+                <h2>
+                    Advancing <span class="hero-gradient">Biochemistry</span>
+                </h2>
+                <p class="hero-subtitle">
+                    A focused ecosystem for education, diagnostics, and external quality assessment in clinical biochemistry.
+                    Designed for laboratories, clinicians, researchers, and students.
+                </p>
+
+                <div class="hero-tags">
+                    <span class="tag-pill">EQAS &amp; Quality Assurance</span>
+                    <span class="tag-pill">Clinical Chemistry</span>
+                    <span class="tag-pill">Education &amp; Outreach</span>
+                </div>
+
+                <div class="hero-cta">
+                    <button class="btn-primary">
+                        Explore Modules
+                        <span>⟶</span>
+                    </button>
+                    <button class="btn-ghost">
+                        Learn more about our vision
+                    </button>
+                </div>
+
+                <div class="hero-meta">
+                    <strong>Built for labs, powered by science.</strong>  
+                    Trusted content, methodical quality assurance, and practical implementation pathways.
+                </div>
+            </div>
+
+            <div class="hero-image-wrapper">
+                <div class="hero-image">
+                    <!-- NEW: serum / clinical chemistry analyzers image -->
+                    <img src="https://doctorialsacademy.com/wp-content/uploads/2024/02/biochemistry-definition-1.png"
+                         alt="Automated wet chemistry analyzer and clinical chemistry workflow">
+                </div>
+                <div class="hero-badge">
+                    <div class="hero-badge-pill"></div>
+                    <div class="hero-badge-text">
+                        <strong>Precision. Reproducibility. Reliability.</strong><br>
+                        A dedicated space for modern clinical biochemistry practice.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABOUT -->
+        <section id="about">
+            <div class="section-header">
+                <div class="section-accent">
+                    <span></span>
+                    ABOUT
+                </div>
+                <h2>Jeevrasayan - The Omniverse</h2>
+            </div>
+            <p>
+                Life as we know it today evolved and continues in its present form due to series of
+                reactions involving diverse organic molecules within various biological
+                compartments. This led to the genesis of different cellular organelles with specific
+                cellular functions ranging from generation and storage of energy to cellular
+                replication, cellular waste processing, defense etc.
+                            </p>
+            <p>
+                Further integration of these processes led to formation of tissues having a common
+                purpose. These developed into organs, organ systems and finally highly evolved
+                Organisms.
+            </p>
+            <p>Modern day, Jeevrasayan (Biochemistry) is probably the only subject which allows
+                one to understand the principles, the processes and eventually the purpose behind
+                myriads of Pathways regulating our health.
+            </p>
+
+            <p>These are often finely regulated and extremely sensitive to changes in the
+                environment, always trying to keep the body in harmony by balancing both internal
+                and external changes in an organisms environment.
+            </p>
+
+            <p>We at JeevRasayan endeavour to highlight critical processes associated with
+            maintaining good health and enable one to make informed choices related to their
+            health needs.
+            </p>
+
+            <p>This site offers multiple avenues to better understand the fundamentals of health,
+            disease and it’s management all in fun, interactive and innovative ways.
+            </p>
+        </section>
+
+        <!-- MODULES -->
+        <section id="modules">
+            <div class="section-header">
+                <div class="section-accent">
+                    <span></span>
+                    CORE MODULES
+                </div>
+                <h2>What Jeevrasayan Offers</h2>
+            </div>
+
+            <div class="modules-grid">
+
+                <!-- Education -->
+                <article class="module-card">
+                    <!-- Stock image: classroom / learning -->
+                    <img src="https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=900&q=80"
+                         alt="Students and professionals learning together">
+                    <div class="card-content">
+                        <h3>Education</h3>
+                        <p>
+                            Structured learning pathways, concept explainers, and case-based sessions 
+                            for students and professionals in clinical biochemistry, molecular biology, 
+                            and laboratory medicine.
+                        </p>
+                        <span class="card-pill">Courses · Webinars · Micro-modules</span>
+                    </div>
+                </article>
+
+                <!-- EQAS -->
+                <article class="module-card">
+                    <!-- Stock image: quality assurance / lab comparison -->
+                    <img src="https://www.lambdatest.com/dynamic-pages/resources/images/learning-hub/key-principles-of-quality-assurance.webp"
+                         alt="Laboratory scientist performing quality control">
+                    <div class="card-content">
+                        <h3>EQAS (External Quality Assessment)</h3>
+                        <p>
+                            Robust, statistically sound EQAS programs enabling laboratories to monitor 
+                            accuracy, detect bias, and benchmark performance using harmonized 
+                            quality frameworks.
+                        </p>
+                        <span class="card-pill">Accuracy · Comparability · Compliance</span>
+                    </div>
+                </article>
+
+                <!-- Diagnostics -->
+                <article class="module-card">  
+                    <!-- FIXED: working image URL for diagnostics -->
+                    <img src="https://familypracticecenterpc.com/wp-content/uploads/2019/09/family-practice-near-me-medical-testing-center-Atlanta-GA-x-rays-Atlanta-GA-types-of-medical-tests-blood-test.jpg"
+                         alt="Diagnostic testing and assay setup in a clinical chemistry lab">
+                    <div class="card-content">
+                        <h3>Diagnostics</h3>
+                        <p>
+                            Guidance on assay selection, validation, and interpretation of complex 
+                            biochemical markers, with emphasis on tumour markers, endocrine assays, 
+                            and critical care parameters.
+                        </p>
+                        <span class="card-pill">Assay Design · Validation · Interpretation</span>
+                    </div>
+                </article>
+
+                <!-- Outreach -->
+                <article class="module-card">
+                    <!-- Stock image: outreach / public health -->
+                    <img src="https://healthyhenrycounty.org/wp-content/uploads/2020/08/healthy-lifestyle-1-1024x585.png"
+                         alt="Public health outreach and discussion">
+                    <div class="card-content">
+                        <h3>Lifestyle</h3>
+                        <p>
+                            Community engagement, public health communication, and collaborative 
+                            initiatives that bring biochemical understanding closer to clinicians, 
+                            policy-makers, and the general public.
+                        </p>
+                        <span class="card-pill">Awareness · Collaboration · Impact</span>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <p>
+            &copy; <span>2025 Jeevrasayan</span>. All rights reserved &mdash; Advancing Biochemistry with 
+            evidence, quality, and care.
+        </p>
+    </footer>
+
+</body>
+</html>
