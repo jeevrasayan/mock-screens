@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Health Tracker - Prototype</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-color: #0056d6;
+      --primary-soft: rgba(0, 86, 214, 0.12);
+      --secondary-color: #6C757D;
+      --accent-color: #28a745;
+      --background-color: #0b1020;
+      --card-background: #121727;
+      --card-soft: rgba(255,255,255,0.03);
+      --text-color: #e9edf5;
+      --muted-text: #a7b0c6;
+      --danger-color: #dc3545;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background: radial-gradient(circle at top, #1b2440 0, #050816 40%, #02030a 100%);
+      color: var(--text-color);
+      min-height: 100vh;
+    }
+
+    .page-wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px 40px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 20px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    header p {
+      font-size: 0.9rem;
+      color: var(--muted-text);
+      max-width: 520px;
+    }
+
+    a.back-link {
+      font-size: 0.85rem;
+      color: var(--muted-text);
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 6px 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    a.back-link:hover {
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border-radius: 16px;
+      padding: 16px 18px 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: 0 18px 35px rgba(0,0,0,0.5);
+      backdrop-filter: blur(12px);
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+
+    .card-subtitle {
+      font-size: 0.8rem;
+      color: var(--muted-text);
+      margin-bottom: 12px;
+    }
+
+    form .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 12px;
+    }
+
+    @media (max-width: 700px) {
+      form .field-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.85rem;
+    }
+
+    label {
+      color: var(--muted-text);
+    }
+
+    input[type="date"],
+    input[type="time"],
+    input[type="number"] {
+      background: rgba(2, 7, 30, 0.9);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-color);
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    input[type="date"]:focus,
+    input[type="time"]:focus,
+    input[type="number"]:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 1px rgba(0,86,214,0.4);
+      background: rgba(4, 11, 40, 0.95);
+    }
+
+    .hint {
+      font-size: 0.7rem;
+      color: var(--muted-text);
+    }
+
+    .btn-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: none;
+      padding: 7px 16px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #0056d6, #1b8df2);
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(0, 86, 214, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(0, 86, 214, 0.5);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--muted-text);
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255,255,255,0.04);
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: var(--muted-text);
+    }
+
+    .status span.ok {
+      color: #7bf3a4;
+    }
+
+    .status span.err {
+      color: #ff9fae;
+    }
+
+    .table-wrapper {
+      max-height: 260px;
+      overflow: auto;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(1,5,20,0.96);
+      margin-top: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      min-width: 700px;
+    }
+
+    thead {
+      position: sticky;
+      top: 0;
+      background: rgba(3,9,35,0.98);
+      z-index: 1;
+    }
+
+    th, td {
+      padding: 6px 8px;
+      text-align: right;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child {
+      text-align: left;
+    }
+
+    th {
+      font-weight: 500;
+      color: var(--muted-text);
+    }
+
+    tr:nth-child(even) td {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .empty-state {
+      font-size: 0.8rem;
+      color: var(--muted-text);
+      padding: 12px 6px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-wrapper">
+    <header>
+      <div>
+        <h1>Health Tracker – Prototype</h1>
+        <p>Enter blood pressure, heart rate, lipid profile and creatinine. Data will be sent to your Azure backend.</p>
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Add Reading</h2>
+        <p class="card-subtitle">BP in mmHg, lipids & creatinine in mg/dL, heart rate in bpm.</p>
+
+        <form id="reading-form">
+          <div class="field-grid">
+            <div class="form-group">
+              <label for="date">Date</label>
+              <input type="date" id="date" name="date" required />
+            </div>
+
+            <div class="form-group">
+              <label for="time">Time <span class="hint">(optional)</span></label>
+              <input type="time" id="time" name="time" />
+            </div>
+
+            <div class="form-group">
+              <label for="systolic">Systolic BP (mmHg)</label>
+              <input type="number" id="systolic" name="systolic" required />
+            </div>
+
+            <div class="form-group">
+              <label for="diastolic">Diastolic BP (mmHg)</label>
+              <input type="number" id="diastolic" name="diastolic" required />
+            </div>
+
+            <div class="form-group">
+              <label for="heartRate">Heart Rate (bpm)</label>
+              <input type="number" id="heartRate" name="heartRate" />
+            </div>
+
+            <div class="form-group">
+              <label for="totalChol">Total Cholesterol (mg/dL)</label>
+              <input type="number" id="totalChol" name="totalChol" />
+            </div>
+
+            <div class="form-group">
+              <label for="hdl">HDL (mg/dL)</label>
+              <input type="number" id="hdl" name="hdl" />
+            </div>
+
+            <div class="form-group">
+              <label for="ldl">LDL (mg/dL)</label>
+              <input type="number" id="ldl" name="ldl" />
+            </div>
+
+            <div class="form-group">
+              <label for="trig">Triglycerides (mg/dL)</label>
+              <input type="number" id="trig" name="trig" />
+            </div>
+
+            <div class="form-group">
+              <label for="creatinine">Creatinine (mg/dL)</label>
+              <input type="number" id="creatinine" name="creatinine" step="0.1" />
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-ghost" id="load-readings-btn">Load All Readings</button>
+            <button type="submit" class="btn btn-primary">Save to Backend</button>
+          </div>
+        </form>
+
+        <div class="status" id="status"></div>
+      </section>
+
+      <section class="card">
+        <h2>Stored Readings (from backend)</h2>
+        <div id="table-container">
+          <div class="empty-state" id="empty-state">
+            No data loaded yet. Click “Load All Readings” to fetch from backend.
+          </div>
+          <div class="table-wrapper" id="table-wrapper" style="display:none;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date / Time</th>
+                  <th>BP</th>
+                  <th>HR</th>
+                  <th>TC</th>
+                  <th>HDL</th>
+                  <th>LDL</th>
+                  <th>TG</th>
+                  <th>Creatinine</th>
+                </tr>
+              </thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ⚠️ Change this once Azure is deployed
+    const API_BASE_URL = "https://YOUR_AZURE_APP_NAME.azurewebsites.net";
+
+    const form = document.getElementById("reading-form");
+    const statusDiv = document.getElementById("status");
+    const loadBtn = document.getElementById("load-readings-btn");
+    const tableWrapper = document.getElementById("table-wrapper");
+    const emptyState = document.getElementById("empty-state");
+    const tableBody = document.getElementById("table-body");
+
+    // Default date = today
+    const dateInput = document.getElementById("date");
+    if (dateInput && !dateInput.value) {
+      const today = new Date();
+      dateInput.value = today.toISOString().slice(0, 10);
+    }
+
+    function showStatus(message, ok = true) {
+      if (!statusDiv) return;
+      statusDiv.innerHTML = ok
+        ? `<span class="ok">${message}</span>`
+        : `<span class="err">${message}</span>`;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      showStatus("Saving...", true);
+
+      const formData = new FormData(form);
+      const payload = {
+        date: formData.get("date") || null,
+        time: formData.get("time") || null,
+        systolic: formData.get("systolic") ? Number(formData.get("systolic")) : null,
+        diastolic: formData.get("diastolic") ? Number(formData.get("diastolic")) : null,
+        heartRate: formData.get("heartRate") ? Number(formData.get("heartRate")) : null,
+        totalChol: formData.get("totalChol") ? Number(formData.get("totalChol")) : null,
+        hdl: formData.get("hdl") ? Number(formData.get("hdl")) : null,
+        ldl: formData.get("ldl") ? Number(formData.get("ldl")) : null,
+        trig: formData.get("trig") ? Number(formData.get("trig")) : null,
+        creatinine: formData.get("creatinine") ? Number(formData.get("creatinine")) : null,
+      };
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/readings`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || `HTTP ${res.status}`);
+        }
+
+        showStatus("Saved successfully ✅", true);
+        form.reset();
+        // keep date as today
+        if (dateInput && !dateInput.value) {
+          const today = new Date();
+          dateInput.value = today.toISOString().slice(0, 10);
+        }
+      } catch (err) {
+        console.error(err);
+        showStatus("Error saving data. Check console / backend.", false);
+      }
+    });
+
+    async function loadReadings() {
+      showStatus("Loading readings...", true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/readings`);
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(text || `HTTP ${res.status}`);
+        }
+        const data = await res.json();
+
+        if (!Array.isArray(data) || data.length === 0) {
+          tableWrapper.style.display = "none";
+          emptyState.style.display = "block";
+          showStatus("No data found yet.", true);
+          return;
+        }
+
+        tableBody.innerHTML = "";
+        data.forEach((entry) => {
+          const tr = document.createElement("tr");
+          const dateTime = `${entry.date || ""} ${entry.time || ""}`.trim() || "—";
+
+          tr.innerHTML = `
+            <td>${dateTime}</td>
+            <td>${entry.systolic && entry.diastolic ? `${entry.systolic}/${entry.diastolic}` : "—"}</td>
+            <td>${entry.heartRate ?? "—"}</td>
+            <td>${entry.totalChol ?? "—"}</td>
+            <td>${entry.hdl ?? "—"}</td>
+            <td>${entry.ldl ?? "—"}</td>
+            <td>${entry.trig ?? "—"}</td>
+            <td>${entry.creatinine ?? "—"}</td>
+          `;
+          tableBody.appendChild(tr);
+        });
+
+        emptyState.style.display = "none";
+        tableWrapper.style.display = "block";
+        showStatus("Loaded readings from backend ✅", true);
+      } catch (err) {
+        console.error(err);
+        showStatus("Error loading readings from backend.", false);
+      }
+    }
+
+    loadBtn.addEventListener("click", loadReadings);
+  </script>
+</body>
+</html>
