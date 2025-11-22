@@ -110,6 +110,33 @@
       gap: 10px 12px;
     }
 
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .chart-box {
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 12px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      height: 230px; /* gives Chart.js some vertical space */
+    }
+
+    .chart-box h3 {
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+      color: var(--muted-text);
+    }
+
+    .chart-box canvas {
+      width: 100%;
+      height: 170px;
+    }
+
+
     @media (max-width: 700px) {
       form .field-grid {
         grid-template-columns: minmax(0, 1fr);
@@ -361,25 +388,56 @@
           </div>
         </div>
       </section>
+      <section class="card" id="charts-card">
+        <h2>Trends</h2>
+        <p class="card-subtitle">Each line shows how your values change over time.</p>
+
+        <div class="charts-grid">
+          <div class="chart-box">
+            <h3>Blood Pressure</h3>
+            <canvas id="bpChart"></canvas>
+          </div>
+
+          <div class="chart-box">
+            <h3>Heart Rate</h3>
+            <canvas id="hrChart"></canvas>
+          </div>
+
+          <div class="chart-box">
+            <h3>Lipids</h3>
+            <canvas id="lipidChart"></canvas>
+          </div>
+
+          <div class="chart-box">
+            <h3>Creatinine</h3>
+            <canvas id="creatinineChart"></canvas>
+          </div>
+        </div>
+      </section>
+
     </main>
   </div>
 
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     window.addEventListener("DOMContentLoaded", () => {
       // 1️⃣ Point to your Azure backend
       const API_BASE_URL = "https://healthcare-api-jeev-cgd7emcacgdtf5d0.centralus-01.azurewebsites.net";
       console.log("API_BASE_URL in tracker.js =", API_BASE_URL);
+
       // ---- DOM references ----
-      const form        = document.getElementById("reading-form");
-      const loadBtn     = document.getElementById("load-readings-btn");
-      const statusEl    = document.getElementById("status");
-      const tbody       = document.getElementById("table-body");
-      const emptyState  = document.getElementById("empty-state");
-      const tableWrapper= document.getElementById("table-wrapper");
+      const form         = document.getElementById("reading-form");
+      const loadBtn      = document.getElementById("load-readings-btn");
+      const statusEl     = document.getElementById("status");
+      const tbody        = document.getElementById("table-body");
+      const emptyState   = document.getElementById("empty-state");
+      const tableWrapper = document.getElementById("table-wrapper");
 
       let entries = [];
+      let bpChart, hrChart, lipidChart, creatinineChart;
 
-      // ---- Helpers ----
+      // ---------- Helpers ----------
       function setStatus(message, isError = false) {
         if (!statusEl) return;
         statusEl.textContent = message || "";
@@ -392,6 +450,7 @@
         return `${dateStr} ${timeStr}`;
       }
 
+      // ---------- TABLE RENDER ----------
       function renderTable() {
         tbody.innerHTML = "";
 
@@ -414,25 +473,182 @@
             tr.appendChild(td);
           }
 
-          addCell(formatDateTime(e.date, e.time || ""), false); // Date / Time
+          addCell(formatDateTime(e.date, e.time || ""), false);               // Date / Time
           addCell(e.systolic && e.diastolic ? `${e.systolic}/${e.diastolic}` : "—"); // BP
-          addCell(e.heartRate ?? "—");    // HR
-          addCell(e.totalChol ?? "—");    // TC
-          addCell(e.hdl ?? "—");          // HDL
-          addCell(e.ldl ?? "—");          // LDL
-          addCell(e.trig ?? "—");         // TG
-          addCell(e.creatinine ?? "—");   // Creatinine (if backend stores it)
+          addCell(e.heartRate ?? "—");                                        // HR
+          addCell(e.totalChol ?? "—");                                        // TC
+          addCell(e.hdl ?? "—");                                              // HDL
+          addCell(e.ldl ?? "—");                                              // LDL
+          addCell(e.trig ?? "—");                                             // TG
+          addCell(e.creatinine ?? "—");                                       // Creatinine
 
           tbody.appendChild(tr);
         });
       }
 
+      // ---------- CHARTS ----------
+      function initCharts() {
+        const bpCtx    = document.getElementById("bpChart");
+        const hrCtx    = document.getElementById("hrChart");
+        const lipidCtx = document.getElementById("lipidChart");
+        const creatCtx = document.getElementById("creatinineChart");
+
+        // If charts section not present for some reason, bail out
+        if (!bpCtx || !hrCtx || !lipidCtx || !creatCtx || typeof Chart === "undefined") {
+          console.warn("Chart canvases or Chart.js not found, skipping charts init.");
+          return;
+        }
+
+        const commonOptions = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: "#cfd6ff", font: { size: 10 } }
+            },
+            tooltip: { mode: "index", intersect: false }
+          },
+          scales: {
+            x: {
+              ticks: { color: "#9aa3ce", autoSkip: true, maxRotation: 45, minRotation: 0 },
+              grid: { color: "rgba(255,255,255,0.06)" }
+            },
+            y: {
+              ticks: { color: "#9aa3ce" },
+              grid: { color: "rgba(255,255,255,0.04)" }
+            }
+          }
+        };
+
+        // BP chart
+        bpChart = new Chart(bpCtx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Systolic",
+                data: [],
+                borderWidth: 2,
+                pointRadius: 2,
+                tension: 0.3
+              },
+              {
+                label: "Diastolic",
+                data: [],
+                borderWidth: 2,
+                borderDash: [4, 4],
+                pointRadius: 2,
+                tension: 0.3
+              }
+            ]
+          },
+          options: commonOptions
+        });
+
+        // Heart rate chart
+        hrChart = new Chart(hrCtx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Heart Rate",
+                data: [],
+                borderWidth: 2,
+                pointRadius: 2,
+                tension: 0.3
+              }
+            ]
+          },
+          options: commonOptions
+        });
+
+        // Lipids chart
+        lipidChart = new Chart(lipidCtx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              { label: "Total Chol", data: [], borderWidth: 2, pointRadius: 2, tension: 0.3 },
+              { label: "HDL",        data: [], borderWidth: 2, pointRadius: 2, tension: 0.3 },
+              { label: "LDL",        data: [], borderWidth: 2, pointRadius: 2, tension: 0.3 },
+              { label: "TG",         data: [], borderWidth: 2, pointRadius: 2, tension: 0.3 }
+            ]
+          },
+          options: commonOptions
+        });
+
+        // Creatinine chart
+        creatinineChart = new Chart(creatCtx, {
+          type: "line",
+          data: {
+            labels: [],
+            datasets: [
+              {
+                label: "Creatinine",
+                data: [],
+                borderWidth: 2,
+                pointRadius: 2,
+                tension: 0.3
+              }
+            ]
+          },
+          options: commonOptions
+        });
+      }
+
+      function updateCharts() {
+        if (!bpChart || !hrChart || !lipidChart || !creatinineChart) return;
+
+        const sorted = [...entries].sort((a, b) => {
+          if (a.date === b.date) return (a.time || "").localeCompare(b.time || "");
+          return a.date.localeCompare(b.date);
+        });
+
+        const labels     = sorted.map(e => formatDateTime(e.date, e.time || ""));
+        const systolic   = sorted.map(e => e.systolic ?? null);
+        const diastolic  = sorted.map(e => e.diastolic ?? null);
+        const heartRate  = sorted.map(e => e.heartRate ?? null);
+        const totalChol  = sorted.map(e => e.totalChol ?? null);
+        const hdl        = sorted.map(e => e.hdl ?? null);
+        const ldl        = sorted.map(e => e.ldl ?? null);
+        const trig       = sorted.map(e => e.trig ?? null);
+        const creatinine = sorted.map(e => e.creatinine ?? null);
+
+        // BP
+        bpChart.data.labels           = labels;
+        bpChart.data.datasets[0].data = systolic;
+        bpChart.data.datasets[1].data = diastolic;
+        bpChart.update();
+
+        // HR
+        hrChart.data.labels           = labels;
+        hrChart.data.datasets[0].data = heartRate;
+        hrChart.update();
+
+        // Lipids
+        lipidChart.data.labels           = labels;
+        lipidChart.data.datasets[0].data = totalChol;
+        lipidChart.data.datasets[1].data = hdl;
+        lipidChart.data.datasets[2].data = ldl;
+        lipidChart.data.datasets[3].data = trig;
+        lipidChart.update();
+
+        // Creatinine
+        creatinineChart.data.labels           = labels;
+        creatinineChart.data.datasets[0].data = creatinine;
+        creatinineChart.update();
+      }
+
+      // ---------- BACKEND CALLS ----------
       async function loadAllReadings() {
         setStatus("Loading readings...");
         try {
           const res = await fetch(`${API_BASE_URL}/api/readings`);
           if (!res.ok) throw new Error(`Server returned ${res.status}`);
           const data = await res.json();
+
           if (!Array.isArray(data)) {
             entries = [];
           } else {
@@ -443,7 +659,9 @@
               return a.date.localeCompare(b.date);
             });
           }
+
           renderTable();
+          updateCharts();
           setStatus(`Loaded ${entries.length} readings.`);
         } catch (err) {
           console.error("Error fetching readings:", err);
@@ -466,11 +684,11 @@
         return await res.json().catch(() => entry);
       }
 
-      // ---- Event handlers ----
+      // ---------- Event handlers ----------
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
 
-        const formData = new FormData(form);
+        const formData  = new FormData(form);
         const date      = formData.get("date");
         const time      = formData.get("time") || "";
         const systolic  = formData.get("systolic");
@@ -484,21 +702,20 @@
         const entry = {
           date,
           time,
-          systolic:  Number(systolic),
-          diastolic: Number(diastolic),
-          heartRate: formData.get("heartRate")  ? Number(formData.get("heartRate"))  : null,
-          totalChol: formData.get("totalChol")  ? Number(formData.get("totalChol"))  : null,
-          hdl:       formData.get("hdl")        ? Number(formData.get("hdl"))        : null,
-          ldl:       formData.get("ldl")        ? Number(formData.get("ldl"))        : null,
-          trig:      formData.get("trig")       ? Number(formData.get("trig"))       : null,
-          creatinine:formData.get("creatinine") ? Number(formData.get("creatinine")) : null,
+          systolic:   Number(systolic),
+          diastolic:  Number(diastolic),
+          heartRate:  formData.get("heartRate")  ? Number(formData.get("heartRate"))  : null,
+          totalChol:  formData.get("totalChol")  ? Number(formData.get("totalChol"))  : null,
+          hdl:        formData.get("hdl")        ? Number(formData.get("hdl"))        : null,
+          ldl:        formData.get("ldl")        ? Number(formData.get("ldl"))        : null,
+          trig:       formData.get("trig")       ? Number(formData.get("trig"))       : null,
+          creatinine: formData.get("creatinine") ? Number(formData.get("creatinine")) : null,
         };
 
         try {
           setStatus("Saving reading...");
           const saved = await saveReading(entry);
 
-          // Add/merge into local list
           entries.push(saved);
           entries.sort((a, b) => {
             if (a.date === b.date) {
@@ -508,6 +725,7 @@
           });
 
           renderTable();
+          updateCharts();
           setStatus("Saved successfully.");
           form.reset();
 
@@ -532,10 +750,14 @@
         dateInput.value = today;
       }
 
+      // 🚀 Init charts once, then you can call updateCharts() anytime entries change
+      initCharts();
+
       // Optional: auto-load on page open
       // loadAllReadings();
     });
   </script>
+
 
 
 </body>
