@@ -368,7 +368,7 @@
     window.addEventListener("DOMContentLoaded", () => {
       // 1️⃣ Point to your Azure backend
       const API_BASE_URL = "https://healthcare-api-jeev-cgd7emcacgtdf5d0.centralus-01.azurewebsites.net";
-
+      console.log("API_BASE_URL in tracker.js =", API_BASE_URL);
       // ---- DOM references ----
       const form        = document.getElementById("reading-form");
       const loadBtn     = document.getElementById("load-readings-btn");
