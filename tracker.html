@@ -366,397 +366,177 @@
 
   <script>
     window.addEventListener("DOMContentLoaded", () => {
-        // 🔹 1. Point this to your live Azure backend
-        const API_BASE_URL = "https://healthcare-api-jeev-cgd7emcacgtdf5d0.centralus-01.azurewebsites.net";
+      // 1️⃣ Point to your Azure backend
+      const API_BASE_URL = "https://healthcare-api-jeev-cgd7emcacgtdf5d0.centralus-01.azurewebsites.net";
 
-        // ---- State ----
-        let entries = [];
+      // ---- DOM references ----
+      const form        = document.getElementById("reading-form");
+      const loadBtn     = document.getElementById("load-readings-btn");
+      const statusEl    = document.getElementById("status");
+      const tbody       = document.getElementById("table-body");
+      const emptyState  = document.getElementById("empty-state");
+      const tableWrapper= document.getElementById("table-wrapper");
 
-        // ---- DOM refs ----
-        const form = document.getElementById("entry-form");
-        const resetFormBtn = document.getElementById("reset-form-btn");
-        const clearAllBtn = document.getElementById("clear-all-btn");
-        const entriesBody = document.getElementById("entries-body");
-        const entriesCount = document.getElementById("entries-count");
-        const emptyState = document.getElementById("empty-state");
-        const tableWrapper = document.getElementById("table-wrapper");
+      let entries = [];
 
-        const summaryBP = document.getElementById("summary-bp");
-        const summaryHR = document.getElementById("summary-hr");
-        const summaryTC = document.getElementById("summary-tc");
-        const summaryCount = document.getElementById("summary-count");
+      // ---- Helpers ----
+      function setStatus(message, isError = false) {
+        if (!statusEl) return;
+        statusEl.textContent = message || "";
+        statusEl.style.color = isError ? "#ff9fae" : "#a7b0c6";
+      }
 
-        let bpChart, hrChart, lipidChart;
-
-        // ---------- Backend helpers ----------
-        async function fetchAllEntries() {
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/readings`);
-            if (!res.ok) throw new Error("Failed to fetch readings");
-            const data = await res.json();
-            if (!Array.isArray(data)) return [];
-            return data.sort((a, b) => {
-            if (a.date === b.date) {
-                return (a.time || "").localeCompare(b.time || "");
-            }
-            return a.date.localeCompare(b.date);
-            });
-        } catch (err) {
-            console.error("Error fetching entries from backend:", err);
-            alert("Could not load data from server. Check connection.");
-            return [];
-        }
-        }
-
-        async function saveEntryToBackend(entry) {
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/readings`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(entry),
-            });
-            if (!res.ok) {
-            const msg = await res.text();
-            throw new Error(msg || "Failed to save entry");
-            }
-            const saved = await res.json();
-            return saved;
-        } catch (err) {
-            console.error("Error saving entry:", err);
-            alert("Could not save entry to server.");
-            throw err;
-        }
-        }
-
-        async function deleteEntryFromBackend(id) {
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/readings/${id}`, {
-            method: "DELETE",
-            });
-            if (!res.ok) throw new Error("Failed to delete entry");
-        } catch (err) {
-            console.error("Error deleting entry:", err);
-            alert("Could not delete entry on server.");
-            throw err;
-        }
-        }
-
-        // ---------- UI helpers ----------
-        function formatDateTime(dateStr, timeStr) {
+      function formatDateTime(dateStr, timeStr) {
         if (!dateStr) return "—";
         if (!timeStr) return dateStr;
         return `${dateStr} ${timeStr}`;
-        }
+      }
 
-        function renderTable() {
-        entriesBody.innerHTML = "";
+      function renderTable() {
+        tbody.innerHTML = "";
 
         if (!entries.length) {
-            tableWrapper.style.display = "none";
-            emptyState.style.display = "block";
-            entriesCount.textContent = "0";
-            return;
+          tableWrapper.style.display = "none";
+          emptyState.style.display   = "block";
+          return;
         }
 
         tableWrapper.style.display = "block";
-        emptyState.style.display = "none";
+        emptyState.style.display   = "none";
 
-        entries.forEach((entry) => {
-            const tr = document.createElement("tr");
+        entries.forEach(e => {
+          const tr = document.createElement("tr");
 
-            const dateTd = document.createElement("td");
-            dateTd.textContent = formatDateTime(entry.date, entry.time);
-            tr.appendChild(dateTd);
+          function addCell(text, alignRight = true) {
+            const td = document.createElement("td");
+            td.textContent = text;
+            if (!alignRight) td.style.textAlign = "left";
+            tr.appendChild(td);
+          }
 
-            const systTd = document.createElement("td");
-            systTd.textContent = entry.systolic ?? "—";
-            tr.appendChild(systTd);
+          addCell(formatDateTime(e.date, e.time || ""), false); // Date / Time
+          addCell(e.systolic && e.diastolic ? `${e.systolic}/${e.diastolic}` : "—"); // BP
+          addCell(e.heartRate ?? "—");    // HR
+          addCell(e.totalChol ?? "—");    // TC
+          addCell(e.hdl ?? "—");          // HDL
+          addCell(e.ldl ?? "—");          // LDL
+          addCell(e.trig ?? "—");         // TG
+          addCell(e.creatinine ?? "—");   // Creatinine (if backend stores it)
 
-            const diastTd = document.createElement("td");
-            diastTd.textContent = entry.diastolic ?? "—";
-            tr.appendChild(diastTd);
+          tbody.appendChild(tr);
+        });
+      }
 
-            const hrTd = document.createElement("td");
-            hrTd.textContent = entry.heartRate ?? "—";
-            tr.appendChild(hrTd);
-
-            const tcTd = document.createElement("td");
-            tcTd.textContent = entry.totalChol ?? "—";
-            tr.appendChild(tcTd);
-
-            const hdlTd = document.createElement("td");
-            hdlTd.textContent = entry.hdl ?? "—";
-            tr.appendChild(hdlTd);
-
-            const ldlTd = document.createElement("td");
-            ldlTd.textContent = entry.ldl ?? "—";
-            tr.appendChild(ldlTd);
-
-            const trigTd = document.createElement("td");
-            trigTd.textContent = entry.trig ?? "—";
-            tr.appendChild(trigTd);
-
-            const actionTd = document.createElement("td");
-            actionTd.style.textAlign = "center";
-            const delBtn = document.createElement("button");
-            delBtn.type = "button";
-            delBtn.textContent = "Delete";
-            delBtn.className = "btn btn-ghost";
-            delBtn.style.padding = "3px 10px";
-            delBtn.style.fontSize = "0.7rem";
-            delBtn.addEventListener("click", async () => {
-            if (!confirm("Delete this reading?")) return;
-            await handleDeleteEntry(entry.id);
+      async function loadAllReadings() {
+        setStatus("Loading readings...");
+        try {
+          const res = await fetch(`${API_BASE_URL}/api/readings`);
+          if (!res.ok) throw new Error(`Server returned ${res.status}`);
+          const data = await res.json();
+          if (!Array.isArray(data)) {
+            entries = [];
+          } else {
+            entries = data.sort((a, b) => {
+              if (a.date === b.date) {
+                return (a.time || "").localeCompare(b.time || "");
+              }
+              return a.date.localeCompare(b.date);
             });
-            actionTd.appendChild(delBtn);
-            tr.appendChild(actionTd);
+          }
+          renderTable();
+          setStatus(`Loaded ${entries.length} readings.`);
+        } catch (err) {
+          console.error("Error fetching readings:", err);
+          setStatus("Could not load data from server. Check connection.", true);
+        }
+      }
 
-            entriesBody.appendChild(tr);
+      async function saveReading(entry) {
+        const res = await fetch(`${API_BASE_URL}/api/readings`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(entry),
         });
 
-        entriesCount.textContent = entries.length.toString();
+        if (!res.ok) {
+          const msg = await res.text().catch(() => "");
+          throw new Error(msg || `Failed to save (status ${res.status})`);
         }
 
-        function updateSummary() {
-        const last = entries[entries.length - 1];
-        summaryCount.textContent = entries.length.toString();
+        return await res.json().catch(() => entry);
+      }
 
-        if (!last) {
-            summaryBP.textContent = "—";
-            summaryHR.textContent = "—";
-            summaryTC.textContent = "—";
-            return;
-        }
-
-        summaryBP.textContent =
-            last.systolic && last.diastolic ? `${last.systolic}/${last.diastolic} mmHg` : "—";
-
-        summaryHR.textContent = last.heartRate ? `${last.heartRate} bpm` : "—";
-        summaryTC.textContent = last.totalChol ? `${last.totalChol} mg/dL` : "—";
-        }
-
-        function initCharts() {
-        const bpCtx = document.getElementById("bpChart").getContext("2d");
-        const hrCtx = document.getElementById("hrChart").getContext("2d");
-        const lipidCtx = document.getElementById("lipidChart").getContext("2d");
-
-        const commonOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-            legend: {
-                labels: {
-                color: "#cfd6ff",
-                font: { size: 10 },
-                },
-            },
-            tooltip: {
-                mode: "index",
-                intersect: false,
-            },
-            },
-            scales: {
-            x: {
-                ticks: { color: "#9aa3ce", maxRotation: 45, minRotation: 0 },
-                grid: { color: "rgba(255,255,255,0.06)" },
-            },
-            y: {
-                ticks: { color: "#9aa3ce" },
-                grid: { color: "rgba(255,255,255,0.04)" },
-            },
-            },
-        };
-
-        bpChart = new Chart(bpCtx, {
-            type: "line",
-            data: {
-            labels: [],
-            datasets: [
-                {
-                label: "Systolic",
-                data: [],
-                tension: 0.35,
-                borderWidth: 2,
-                pointRadius: 3,
-                },
-                {
-                label: "Diastolic",
-                data: [],
-                tension: 0.35,
-                borderWidth: 2,
-                borderDash: [4, 4],
-                pointRadius: 3,
-                },
-            ],
-            },
-            options: commonOptions,
-        });
-
-        hrChart = new Chart(hrCtx, {
-            type: "line",
-            data: {
-            labels: [],
-            datasets: [
-                {
-                label: "Heart Rate",
-                data: [],
-                tension: 0.35,
-                borderWidth: 2,
-                pointRadius: 3,
-                },
-            ],
-            },
-            options: commonOptions,
-        });
-
-        lipidChart = new Chart(lipidCtx, {
-            type: "line",
-            data: {
-            labels: [],
-            datasets: [
-                { label: "Total Chol", data: [], tension: 0.3, borderWidth: 2, pointRadius: 2 },
-                { label: "HDL", data: [], tension: 0.3, borderWidth: 2, pointRadius: 2 },
-                { label: "LDL", data: [], tension: 0.3, borderWidth: 2, pointRadius: 2 },
-                { label: "Triglycerides", data: [], tension: 0.3, borderWidth: 2, pointRadius: 2 },
-            ],
-            },
-            options: commonOptions,
-        });
-        }
-
-        function updateCharts() {
-        const labels = entries.map((e) => formatDateTime(e.date, e.time));
-
-        bpChart.data.labels = labels;
-        bpChart.data.datasets[0].data = entries.map((e) => e.systolic ?? null);
-        bpChart.data.datasets[1].data = entries.map((e) => e.diastolic ?? null);
-        bpChart.update();
-
-        hrChart.data.labels = labels;
-        hrChart.data.datasets[0].data = entries.map((e) => e.heartRate ?? null);
-        hrChart.update();
-
-        lipidChart.data.labels = labels;
-        lipidChart.data.datasets[0].data = entries.map((e) => e.totalChol ?? null);
-        lipidChart.data.datasets[1].data = entries.map((e) => e.hdl ?? null);
-        lipidChart.data.datasets[2].data = entries.map((e) => e.ldl ?? null);
-        lipidChart.data.datasets[3].data = entries.map((e) => e.trig ?? null);
-        lipidChart.update();
-        }
-
-        function refreshUI() {
-        renderTable();
-        updateSummary();
-        updateCharts();
-        }
-
-        // ---------- Event handlers ----------
-        async function handleSubmit(event) {
+      // ---- Event handlers ----
+      form.addEventListener("submit", async (event) => {
         event.preventDefault();
 
         const formData = new FormData(form);
-        const date = formData.get("date");
-        const time = formData.get("time") || "";
+        const date      = formData.get("date");
+        const time      = formData.get("time") || "";
+        const systolic  = formData.get("systolic");
+        const diastolic = formData.get("diastolic");
 
-        if (!date) return;
-
-        const systolic = Number(formData.get("systolic"));
-        const diastolic = Number(formData.get("diastolic"));
-        const heartRate = formData.get("heartRate") ? Number(formData.get("heartRate")) : null;
-        const totalChol = formData.get("totalChol") ? Number(formData.get("totalChol")) : null;
-        const hdl = formData.get("hdl") ? Number(formData.get("hdl")) : null;
-        const ldl = formData.get("ldl") ? Number(formData.get("ldl")) : null;
-        const trig = formData.get("trig") ? Number(formData.get("trig")) : null;
-
-        if (!systolic || !diastolic) {
-            alert("Please enter both systolic and diastolic blood pressure.");
-            return;
+        if (!date || !systolic || !diastolic) {
+          alert("Please enter date, systolic and diastolic BP.");
+          return;
         }
 
-        const newEntry = {
-            id: Date.now(), // id also sent to backend
-            date,
-            time,
-            systolic,
-            diastolic,
-            heartRate,
-            totalChol,
-            hdl,
-            ldl,
-            trig,
+        const entry = {
+          date,
+          time,
+          systolic:  Number(systolic),
+          diastolic: Number(diastolic),
+          heartRate: formData.get("heartRate")  ? Number(formData.get("heartRate"))  : null,
+          totalChol: formData.get("totalChol")  ? Number(formData.get("totalChol"))  : null,
+          hdl:       formData.get("hdl")        ? Number(formData.get("hdl"))        : null,
+          ldl:       formData.get("ldl")        ? Number(formData.get("ldl"))        : null,
+          trig:      formData.get("trig")       ? Number(formData.get("trig"))       : null,
+          creatinine:formData.get("creatinine") ? Number(formData.get("creatinine")) : null,
         };
 
-        const saved = await saveEntryToBackend(newEntry);
-        // backend may change/overwrite id, so use returned object
-        const idx = entries.findIndex((e) => e.id === saved.id);
-        if (idx === -1) {
-            entries.push(saved);
-        } else {
-            entries[idx] = saved;
-        }
-        // sort locally as well
-        entries.sort((a, b) => {
+        try {
+          setStatus("Saving reading...");
+          const saved = await saveReading(entry);
+
+          // Add/merge into local list
+          entries.push(saved);
+          entries.sort((a, b) => {
             if (a.date === b.date) {
-            return (a.time || "").localeCompare(b.time || "");
+              return (a.time || "").localeCompare(b.time || "");
             }
             return a.date.localeCompare(b.date);
-        });
+          });
 
-        refreshUI();
-        form.reset();
+          renderTable();
+          setStatus("Saved successfully.");
+          form.reset();
+
+          // Re-set default date to today after reset
+          const dateInput = document.getElementById("date");
+          if (dateInput && !dateInput.value) {
+            const today = new Date().toISOString().slice(0, 10);
+            dateInput.value = today;
+          }
+        } catch (err) {
+          console.error("Error saving reading:", err);
+          setStatus("Could not save to server.", true);
         }
+      });
 
-        async function handleDeleteEntry(id) {
-        await deleteEntryFromBackend(id);
-        entries = entries.filter((e) => e.id !== id);
-        refreshUI();
-        }
+      loadBtn.addEventListener("click", loadAllReadings);
 
-        function handleResetForm() {
-        form.reset();
-        }
+      // Default date = today
+      const dateInput = document.getElementById("date");
+      if (dateInput && !dateInput.value) {
+        const today = new Date().toISOString().slice(0, 10);
+        dateInput.value = today;
+      }
 
-        async function handleClearAll() {
-        if (!entries.length) return;
-        const ok = confirm("This will delete ALL readings from the server. Continue?");
-        if (!ok) return;
-
-        // naive clear: delete one by one
-        for (const e of entries) {
-            try {
-            await deleteEntryFromBackend(e.id);
-            } catch {
-            // ignore per-row errors
-            }
-        }
-        entries = [];
-        refreshUI();
-        }
-
-        // ---------- Init ----------
-        initCharts();
-
-        form.addEventListener("submit", handleSubmit);
-        resetFormBtn.addEventListener("click", handleResetForm);
-        clearAllBtn.addEventListener("click", handleClearAll);
-
-        // Default date = today
-        const dateInput = document.getElementById("date");
-        if (dateInput && !dateInput.value) {
-        const today = new Date();
-        const iso = today.toISOString().slice(0, 10);
-        dateInput.value = iso;
-        }
-
-        // Initial load from backend
-        (async () => {
-        entries = await fetchAllEntries();
-        refreshUI();
-        })();
+      // Optional: auto-load on page open
+      // loadAllReadings();
     });
-    </script>
+  </script>
+
 
 </body>
 </html>
